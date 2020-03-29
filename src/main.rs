@@ -5,6 +5,8 @@ use std::net::TcpListener;
 use std::thread;
 use std::time::Duration;
 
+use rust_web_server::ThreadPool;
+
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
@@ -13,7 +15,7 @@ fn main() {
     for stream in listener.incoming() {
         let stream = stream.unwrap();
 
-        thread::spawn(|| {
+        pool.execute(|| {
             handle_connection(stream);
         });
     }

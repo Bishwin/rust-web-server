@@ -8,7 +8,7 @@ pub struct ThreadPool {
     sender: mpsc::Sender<Job>,
 }
 
-struct Job;
+type Job = Box<dyn FnOnce() + Send + 'static>;
 
 impl ThreadPool {
     /// Create a new Threadpool.
@@ -41,9 +41,11 @@ impl ThreadPool {
 
     pub fn execute<F>(&self, f: F)
         where
-            F: FnOnce() + Send + 'static 
+            F: FnOnce() + Send + 'static
     {
+        let job = Box::new(f);
 
+        self.sender.send(job).unwrap();
     }
 }
 
@@ -54,8 +56,15 @@ struct Worker {
 
 impl Worker {
     pub fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
-        let thread = thread::spawn(|| {
-            receiver;
+        let thread = thread::spawn(move || {
+            loop {
+                let job = receiver.lock().unwrap().recv().unwrap(); //replace unwrap to an expect with error message
+
+                println!("Worker {} got a job; executing.", id);
+
+                job();
+            }
+            
         });
 
         Worker {

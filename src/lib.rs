@@ -13,6 +13,8 @@ impl ThreadPool {
         ThreadPool
     }
 
+    //TODO implement method pub fn new(size: usize) -> Result<ThreadPool, PoolCreationError>
+    
     pub fn execute<F>(&self, f: F)
         where
             F: FnOnce() + Send + 'static 
